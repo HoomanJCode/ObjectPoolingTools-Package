@@ -1,0 +1,17 @@
+{
+    "name": "indie.hoomanjcode.object-pooling-tools",
+    "version": "0.0.1",
+    "unity": "2020.1",
+    "displayName": "Object Pooling Tools",
+    "description": "You can pool and manage gameobjects and objects in optimized way.",
+    "keywords": [
+        "pooling",
+        "Tools"
+    ],
+    "author": {
+        "name": "Hooman Jalalpoor",
+        "email": "Hooman.Jalalpoor@gmail.com",
+        "url": "https://github.com/HoomanJCode"
+    },
+    "dependencies": {}
+}
