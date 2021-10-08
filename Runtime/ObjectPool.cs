@@ -11,13 +11,12 @@ public interface ICloneable<out T>
 
 public class ObjectPool<T> : IDisposable where T : ICloneable<T>, IDisposable
 {
-    private readonly int _capacity;
     private readonly T[] _objectPrefab;
 
-    // ReSharper disable once MemberCanBePrivate.Global
+    // ReSharper disable once MemberCanBeProtected.Global
     public readonly ObjectPoolBehaviour BehaviourObject;
+    protected readonly int Capacity;
     public readonly T[] Objects;
-    private int _currentPosition = -1;
 
     public ObjectPool(T objectPrefab, ushort capacity = 1, int initializeFrameStep = 0)
     {
@@ -29,11 +28,12 @@ public class ObjectPool<T> : IDisposable where T : ICloneable<T>, IDisposable
 
         BehaviourObject = new GameObject($"{nameof(ObjectPool<T>)}").AddComponent<ObjectPoolBehaviour>();
         _objectPrefab = new[] {objectPrefab};
-        _capacity = capacity;
+        Capacity = capacity;
         Objects = new T[capacity];
         if (initializeFrameStep > 0) Initialize(initializeFrameStep);
     }
 
+    // ReSharper disable once MemberCanBeProtected.Global
     public ObjectPool(T[] objectPrefab, ushort capacity = 1, int initializeFrameStep = 0)
     {
         if (objectPrefab == null || objectPrefab.Length < 1)
@@ -50,15 +50,24 @@ public class ObjectPool<T> : IDisposable where T : ICloneable<T>, IDisposable
 
         BehaviourObject = new GameObject($"{nameof(ObjectPool<T>)} ,...").AddComponent<ObjectPoolBehaviour>();
         _objectPrefab = objectPrefab;
-        _capacity = capacity;
+        Capacity = capacity;
         Objects = new T[capacity];
         if (initializeFrameStep > 0) Initialize(initializeFrameStep);
     }
+
+    // ReSharper disable once MemberCanBePrivate.Global
+    protected int CurrentPosition { get; set; } = -1;
 
     public void Dispose()
     {
         ReleaseUnmanagedResources();
         GC.SuppressFinalize(this);
+    }
+
+    // ReSharper disable once MemberCanBeProtected.Global
+    public void ResetPoolPosition()
+    {
+        CurrentPosition = -1;
     }
 
     // ReSharper disable once MemberCanBePrivate.Global
@@ -69,11 +78,12 @@ public class ObjectPool<T> : IDisposable where T : ICloneable<T>, IDisposable
 
     private IEnumerator InitializeOnFrameDelayEnumerator(int frameStep)
     {
-        for (var i = 0; i < _capacity; i++)
+        if (_objectPrefab == null || _objectPrefab.Length < 1) yield break;
+        for (var i = 0; i < Capacity; i++)
         {
-            if (_objectPrefab == null || _objectPrefab.Length < 1) yield break;
             var randomPrefab = _objectPrefab[Random.Range(0, _objectPrefab.Length)];
             if (randomPrefab == null) yield break;
+            if (Objects[i] != null) Objects[i].Dispose();
             Objects[i] = randomPrefab.Clone();
             for (var c = 0; c < frameStep; c++) yield return null;
         }
@@ -83,7 +93,7 @@ public class ObjectPool<T> : IDisposable where T : ICloneable<T>, IDisposable
     public T GetNext()
     {
         //check is there any inactive
-        var index = ++_currentPosition % _capacity;
+        var index = ++CurrentPosition % Capacity;
         if (Objects[index] == null)
             Objects[index] = _objectPrefab[Random.Range(0, _objectPrefab.Length)].Clone();
         return Objects[index];
@@ -92,7 +102,7 @@ public class ObjectPool<T> : IDisposable where T : ICloneable<T>, IDisposable
     private void ReleaseUnmanagedResources()
     {
         if (BehaviourObject) Object.Destroy(BehaviourObject.gameObject);
-        for (var i = 0; i < _capacity; i++)
+        for (var i = 0; i < Capacity; i++)
             if (Objects[i] != null)
                 Objects[i].Dispose();
     }
