@@ -1,0 +1,18 @@
+{
+  "name": "ObjectPoolingToolsTests",
+  "rootNamespace": "",
+  "references": [
+    "GUID:45b02da7919286346982edad97a6be43"
+  ],
+  "includePlatforms": [
+    "Editor"
+  ],
+  "excludePlatforms": [],
+  "allowUnsafeCode": false,
+  "overrideReferences": false,
+  "precompiledReferences": [],
+  "autoReferenced": true,
+  "defineConstraints": [],
+  "versionDefines": [],
+  "noEngineReferences": false
+}

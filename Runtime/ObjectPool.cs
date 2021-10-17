@@ -4,18 +4,14 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
-public interface ICloneable<out T>
-{
-    T Clone();
-}
-
-public class ObjectPool<T> : IDisposable where T : ICloneable<T>, IDisposable
+public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneable
 {
     private readonly T[] _objectPrefab;
 
     // ReSharper disable once MemberCanBeProtected.Global
     public readonly ObjectPoolBehaviour BehaviourObject;
     protected readonly int Capacity;
+    private readonly bool cleanable;
     public readonly T[] Objects;
 
     public ObjectPool(T objectPrefab, ushort capacity = 1, int initializeFrameStep = 0)
@@ -30,6 +26,7 @@ public class ObjectPool<T> : IDisposable where T : ICloneable<T>, IDisposable
         _objectPrefab = new[] {objectPrefab};
         Capacity = capacity;
         Objects = new T[capacity];
+        cleanable = _objectPrefab.GetType().IsSubclassOf(typeof(IResetAble));
         if (initializeFrameStep > 0) Initialize(initializeFrameStep);
     }
 
@@ -84,7 +81,7 @@ public class ObjectPool<T> : IDisposable where T : ICloneable<T>, IDisposable
             var randomPrefab = _objectPrefab[Random.Range(0, _objectPrefab.Length)];
             if (randomPrefab == null) yield break;
             if (Objects[i] != null) Objects[i].Dispose();
-            Objects[i] = randomPrefab.Clone();
+            Objects[i] = randomPrefab.Clone() as T;
             for (var c = 0; c < frameStep; c++) yield return null;
         }
     }
@@ -94,9 +91,11 @@ public class ObjectPool<T> : IDisposable where T : ICloneable<T>, IDisposable
     {
         //check is there any inactive
         var index = ++CurrentPosition % Capacity;
-        if (Objects[index] == null)
-            Objects[index] = _objectPrefab[Random.Range(0, _objectPrefab.Length)].Clone();
-        return Objects[index];
+        var nextOne = Objects[index];
+        if (nextOne == null) return Objects[index] = _objectPrefab[Random.Range(0, _objectPrefab.Length)].Clone() as T;
+        // ReSharper disable once SuspiciousTypeConversion.Global
+        if (cleanable) (nextOne as IResetAble)?.Reset();
+        return nextOne;
     }
 
     private void ReleaseUnmanagedResources()

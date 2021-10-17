@@ -60,12 +60,12 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
         for (var c = 0; c < Capacity; c++)
         {
             var nextItem = GetNext();
-            if (!nextItem.ComponentObject.gameObject.activeInHierarchy) continue;
-            if (setNewPosition) nextItem.ComponentObject.transform.position = position;
-            nextItem.ComponentObject.gameObject.SetActive(true);
+            if (!nextItem.ComponentData.gameObject.activeInHierarchy) continue;
+            if (setNewPosition) nextItem.ComponentData.transform.position = position;
+            nextItem.ComponentData.gameObject.SetActive(true);
             if (deActiveAfter > 0)
-                BehaviourObject.StartCoroutine(DeActive(nextItem.ComponentObject.gameObject, deActiveAfter));
-            return nextItem.ComponentObject;
+                BehaviourObject.StartCoroutine(DeActive(nextItem.ComponentData.gameObject, deActiveAfter));
+            return nextItem.ComponentData;
         }
 
         throw new IndexOutOfRangeException("Pool is Small for your usage, all GameObjects is in use!");
@@ -74,23 +74,27 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
     public void DeActiveAll()
     {
         foreach (var monoBehaviour in Objects)
-            if (monoBehaviour.ComponentObject)
-                monoBehaviour.ComponentObject.gameObject.SetActive(false);
+            if (monoBehaviour.ComponentData)
+                monoBehaviour.ComponentData.gameObject.SetActive(false);
         ResetPoolPosition();
     }
 
-    public class ObjectPoolItem : ICloneable<ObjectPoolItem>, IDisposable
+    public class ObjectPoolItem : IDisposable, ICloneable
     {
-        public readonly TComponent ComponentObject;
+        public readonly TComponent ComponentData;
+        public readonly GameObject GameObject;
+        public readonly Transform Transform;
 
-        public ObjectPoolItem(TComponent componentObject)
+        public ObjectPoolItem(TComponent componentData)
         {
-            ComponentObject = componentObject;
+            ComponentData = componentData;
+            GameObject = componentData.gameObject;
+            Transform = componentData.transform;
         }
 
-        public ObjectPoolItem Clone()
+        public object Clone()
         {
-            return new ObjectPoolItem(Object.Instantiate(ComponentObject.gameObject, ComponentObject.transform.parent)
+            return new ObjectPoolItem(Object.Instantiate(ComponentData.gameObject, ComponentData.transform.parent)
                 .GetComponent<TComponent>());
         }
 
@@ -102,7 +106,7 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
 
         private void ReleaseUnmanagedResources()
         {
-            Object.Destroy(ComponentObject.gameObject);
+            Object.Destroy(ComponentData.gameObject);
         }
 
         ~ObjectPoolItem()
