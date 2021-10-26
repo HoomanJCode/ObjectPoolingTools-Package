@@ -6,12 +6,12 @@ using Random = UnityEngine.Random;
 
 public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneable
 {
+    private readonly bool _cleanable;
     private readonly T[] _objectPrefab;
 
     // ReSharper disable once MemberCanBeProtected.Global
     public readonly ObjectPoolBehaviour BehaviourObject;
     protected readonly int Capacity;
-    private readonly bool _cleanable;
     public readonly T[] Objects;
 
     public ObjectPool(T objectPrefab, ushort capacity = 1, int initializeFrameStep = 0)

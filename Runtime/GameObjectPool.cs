@@ -83,10 +83,15 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
         ResetPoolPosition();
     }
 
+    public void DeActive(TComponent targetObject)
+    {
+        targetObject.gameObject.SetActive(false);
+    }
+
     public class ObjectPoolItem : IDisposable, ICloneable
     {
-        public readonly TComponent ComponentData;
         private readonly Transform _parent;
+        public readonly TComponent ComponentData;
 
         public ObjectPoolItem(TComponent componentData, Transform parent)
         {
