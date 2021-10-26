@@ -8,14 +8,16 @@ using Object = UnityEngine.Object;
 // ReSharper disable once UnusedType.Global
 public class GameObjectPool : GameObjectPool<Transform>
 {
-    public GameObjectPool(GameObject objectPrefab, ushort capacity = 1, int initializeFrameStep = 0) : base(
-        objectPrefab.transform, capacity, initializeFrameStep)
+    public GameObjectPool(GameObject objectPrefab, ushort capacity = 1, Transform parent = null,
+        int initializeFrameStep = 0) : base(
+        objectPrefab.transform, capacity, parent, initializeFrameStep)
     {
     }
 
     // ReSharper disable once ParameterTypeCanBeEnumerable.Local
-    public GameObjectPool(GameObject[] objectPrefab, ushort capacity = 1, int initializeFrameStep = 0) : base(
-        objectPrefab.Select(x => x.transform).ToArray(), capacity, initializeFrameStep)
+    public GameObjectPool(GameObject[] objectPrefab, ushort capacity = 1, Transform parent = null,
+        int initializeFrameStep = 0) : base(
+        objectPrefab.Select(x => x.transform).ToArray(), capacity, parent, initializeFrameStep)
     {
     }
 }
@@ -24,16 +26,18 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
     where TComponent : Component
 {
     // ReSharper disable once MemberCanBeProtected.Global
-    public GameObjectPool(TComponent objectPrefab, ushort capacity = 1, int initializeFrameStep = 0) : base(
-        new ObjectPoolItem(objectPrefab), capacity, initializeFrameStep)
+    public GameObjectPool(TComponent objectPrefab, ushort capacity = 1, Transform parent = null,
+        int initializeFrameStep = 0) : base(
+        new ObjectPoolItem(objectPrefab, parent), capacity, initializeFrameStep)
     {
         if (objectPrefab) return;
         Debug.LogError($"{nameof(objectPrefab)} Can not be null!");
     }
 
     // ReSharper disable once MemberCanBeProtected.Global
-    public GameObjectPool(IEnumerable<TComponent> objectPrefab, ushort capacity = 1, int initializeFrameStep = 0) :
-        base(objectPrefab.Select(x => new ObjectPoolItem(x)).ToArray(), capacity, initializeFrameStep)
+    public GameObjectPool(IEnumerable<TComponent> objectPrefab, ushort capacity = 1, Transform parent = null,
+        int initializeFrameStep = 0) :
+        base(objectPrefab.Select(x => new ObjectPoolItem(x, parent)).ToArray(), capacity, initializeFrameStep)
     {
     }
 
@@ -60,7 +64,7 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
         for (var c = 0; c < Capacity; c++)
         {
             var nextItem = GetNext();
-            if (!nextItem.ComponentData.gameObject.activeInHierarchy) continue;
+            if (nextItem.ComponentData.gameObject.activeInHierarchy) continue;
             if (setNewPosition) nextItem.ComponentData.transform.position = position;
             nextItem.ComponentData.gameObject.SetActive(true);
             if (deActiveAfter > 0)
@@ -82,20 +86,21 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
     public class ObjectPoolItem : IDisposable, ICloneable
     {
         public readonly TComponent ComponentData;
-        public readonly GameObject GameObject;
-        public readonly Transform Transform;
+        private readonly Transform _parent;
 
-        public ObjectPoolItem(TComponent componentData)
+        public ObjectPoolItem(TComponent componentData, Transform parent)
         {
             ComponentData = componentData;
-            GameObject = componentData.gameObject;
-            Transform = componentData.transform;
+            _parent = parent;
         }
 
         public object Clone()
         {
-            return new ObjectPoolItem(Object.Instantiate(ComponentData.gameObject, ComponentData.transform.parent)
-                .GetComponent<TComponent>());
+            var component = Object
+                .Instantiate(ComponentData.gameObject, _parent ? _parent : ComponentData.transform.parent)
+                .GetComponent<TComponent>();
+            component.gameObject.SetActive(false);
+            return new ObjectPoolItem(component, _parent);
         }
 
         public void Dispose()

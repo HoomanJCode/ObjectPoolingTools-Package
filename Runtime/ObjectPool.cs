@@ -11,7 +11,7 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
     // ReSharper disable once MemberCanBeProtected.Global
     public readonly ObjectPoolBehaviour BehaviourObject;
     protected readonly int Capacity;
-    private readonly bool cleanable;
+    private readonly bool _cleanable;
     public readonly T[] Objects;
 
     public ObjectPool(T objectPrefab, ushort capacity = 1, int initializeFrameStep = 0)
@@ -26,7 +26,7 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
         _objectPrefab = new[] {objectPrefab};
         Capacity = capacity;
         Objects = new T[capacity];
-        cleanable = _objectPrefab.GetType().IsSubclassOf(typeof(IResetAble));
+        _cleanable = _objectPrefab.GetType().IsSubclassOf(typeof(IResetAble));
         if (initializeFrameStep > 0) Initialize(initializeFrameStep);
     }
 
@@ -94,7 +94,7 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
         var nextOne = Objects[index];
         if (nextOne == null) return Objects[index] = _objectPrefab[Random.Range(0, _objectPrefab.Length)].Clone() as T;
         // ReSharper disable once SuspiciousTypeConversion.Global
-        if (cleanable) (nextOne as IResetAble)?.Reset();
+        if (_cleanable) (nextOne as IResetAble)?.Reset();
         return nextOne;
     }
 
