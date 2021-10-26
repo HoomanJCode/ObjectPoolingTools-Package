@@ -49,23 +49,29 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
     }
 
 
-    public TComponent ActiveNext(Vector3 position, float deActiveAfter = 0)
+    public TComponent ActiveNext(Vector3 position, Quaternion rotation, float deActiveAfter = 0)
     {
-        return ActiveNext(true, position, deActiveAfter);
+        return ActiveNext(true, position, rotation, deActiveAfter);
     }
 
     public TComponent ActiveNext(float deActiveAfter = 0)
     {
-        return ActiveNext(false, default, deActiveAfter);
+        return ActiveNext(false, default, default, deActiveAfter);
     }
 
-    private TComponent ActiveNext(bool setNewPosition, Vector3 position, float deActiveAfter)
+    private TComponent ActiveNext(bool setNewPosition, Vector3 position, Quaternion rotation, float deActiveAfter)
     {
         for (var c = 0; c < Capacity; c++)
         {
             var nextItem = GetNext();
             if (nextItem.ComponentData.gameObject.activeInHierarchy) continue;
-            if (setNewPosition) nextItem.ComponentData.transform.position = position;
+            if (setNewPosition)
+            {
+                var transform = nextItem.ComponentData.transform;
+                transform.position = position;
+                transform.rotation = rotation;
+            }
+
             nextItem.ComponentData.gameObject.SetActive(true);
             if (deActiveAfter > 0)
                 BehaviourObject.StartCoroutine(DeActive(nextItem.ComponentData.gameObject, deActiveAfter));
