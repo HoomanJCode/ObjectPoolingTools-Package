@@ -122,7 +122,8 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
 
         private void ReleaseUnmanagedResources()
         {
-            Object.Destroy(ComponentData.gameObject);
+            if (ComponentData)
+                Object.Destroy(ComponentData.gameObject);
         }
 
         ~ObjectPoolItem()
