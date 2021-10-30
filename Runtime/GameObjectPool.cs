@@ -89,7 +89,7 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
         ResetPoolPosition();
     }
 
-    public void DeActive(TComponent targetObject)
+    public static void DeActive(TComponent targetObject)
     {
         targetObject.gameObject.SetActive(false);
     }
