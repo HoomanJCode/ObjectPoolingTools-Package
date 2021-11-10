@@ -28,7 +28,8 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
     // ReSharper disable once MemberCanBeProtected.Global
     public GameObjectPool(TComponent objectPrefab, ushort capacity = 1, Transform parent = null,
         int initializeFrameStep = 0) : base(
-        new ObjectPoolItem(objectPrefab, parent), capacity, initializeFrameStep)
+        new ObjectPoolItem(objectPrefab, parent ? parent : ObjectPoolBehaviour.Singletone.transform), capacity,
+        initializeFrameStep)
     {
         if (objectPrefab) return;
         Debug.LogError($"{nameof(objectPrefab)} Can not be null!");
@@ -36,8 +37,9 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
 
     // ReSharper disable once MemberCanBeProtected.Global
     public GameObjectPool(IEnumerable<TComponent> objectPrefab, ushort capacity = 1, Transform parent = null,
-        int initializeFrameStep = 0) :
-        base(objectPrefab.Select(x => new ObjectPoolItem(x, parent)).ToArray(), capacity, initializeFrameStep)
+        int initializeFrameStep = 0) : base(
+        objectPrefab.Select(x => new ObjectPoolItem(x, parent ? parent : ObjectPoolBehaviour.Singletone.transform))
+            .ToArray(), capacity, initializeFrameStep)
     {
     }
 
@@ -74,7 +76,8 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
 
             nextItem.ComponentData.gameObject.SetActive(true);
             if (deActiveAfter > 0)
-                BehaviourObject.StartCoroutine(DeActive(nextItem.ComponentData.gameObject, deActiveAfter));
+                ObjectPoolBehaviour.Singletone.StartCoroutine(
+                    DeActive(nextItem.ComponentData.gameObject, deActiveAfter));
             return nextItem.ComponentData;
         }
 

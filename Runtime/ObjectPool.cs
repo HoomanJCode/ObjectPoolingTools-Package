@@ -1,16 +1,12 @@
 ﻿using System;
 using System.Collections;
 using UnityEngine;
-using Object = UnityEngine.Object;
 using Random = UnityEngine.Random;
 
 public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneable
 {
     private readonly bool _cleanable;
     private readonly T[] _objectPrefab;
-
-    // ReSharper disable once MemberCanBeProtected.Global
-    public readonly ObjectPoolBehaviour BehaviourObject;
     protected readonly int Capacity;
     public readonly T[] Objects;
 
@@ -22,7 +18,6 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
             return;
         }
 
-        BehaviourObject = new GameObject($"{nameof(ObjectPool<T>)}").AddComponent<ObjectPoolBehaviour>();
         _objectPrefab = new[] {objectPrefab};
         Capacity = capacity;
         Objects = new T[capacity];
@@ -45,7 +40,6 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
             return;
         }
 
-        BehaviourObject = new GameObject($"{nameof(ObjectPool<T>)} ,...").AddComponent<ObjectPoolBehaviour>();
         _objectPrefab = objectPrefab;
         Capacity = capacity;
         Objects = new T[capacity];
@@ -70,7 +64,7 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
     // ReSharper disable once MemberCanBePrivate.Global
     public void Initialize(int frameStep = 0)
     {
-        BehaviourObject.StartCoroutine(InitializeOnFrameDelayEnumerator(frameStep));
+        ObjectPoolBehaviour.Singletone.StartCoroutine(InitializeOnFrameDelayEnumerator(frameStep));
     }
 
     private IEnumerator InitializeOnFrameDelayEnumerator(int frameStep)
@@ -100,7 +94,6 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
 
     private void ReleaseUnmanagedResources()
     {
-        if (BehaviourObject) Object.Destroy(BehaviourObject.gameObject);
         for (var i = 0; i < Capacity; i++)
             if (Objects[i] != null)
                 Objects[i].Dispose();
