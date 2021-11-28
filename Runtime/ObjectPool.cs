@@ -5,6 +5,11 @@ using Random = UnityEngine.Random;
 
 public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneable
 {
+    // ReSharper disable once StaticMemberInGenericType
+    private static bool _frameInstantiateLimitResetAdded;
+
+    // ReSharper disable once StaticMemberInGenericType
+    private static int _frameInstantiateLimitCounter;
     private readonly bool _cleanable;
     private readonly T[] _objectPrefab;
     protected readonly int Capacity;
@@ -47,6 +52,9 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
     // ReSharper disable once MemberCanBePrivate.Global
     protected int CurrentPosition { get; set; } = -1;
 
+    // ReSharper disable once StaticMemberInGenericType
+    public static int FrameInstantiateLimit { get; set; } = 1;
+
     public void Dispose()
     {
         ReleaseUnmanagedResources();
@@ -63,31 +71,37 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
     {
         if (_objectPrefab == null || _objectPrefab.Length < 1) return;
         for (var i = 0; i < Capacity; i++)
-            if (InitializeOnIndex(i))
-                return;
+            InitializeOnIndex(i);
     }
 
-    public void InitializeConcurrent(Action onInitEnded = null)
+    public void InitializeConcurrent(Action onInitEnded = null, bool globalSchedule = true)
     {
         if (_objectPrefab == null || _objectPrefab.Length < 1) return;
-        ObjectPoolBehaviour.Singletone.StartCoroutine(InitializeOnFrameDelayEnumerator(onInitEnded));
+        ObjectPoolBehaviour.Singletone.StartCoroutine(InitializeOnFrameDelayEnumerator(onInitEnded, globalSchedule));
+        if (_frameInstantiateLimitResetAdded) return;
+        _frameInstantiateLimitResetAdded = true;
+        ObjectPoolBehaviour.OnFrame += () => { _frameInstantiateLimitCounter = FrameInstantiateLimit; };
     }
 
-    private IEnumerator InitializeOnFrameDelayEnumerator(Action onInitEnded)
+    private IEnumerator InitializeOnFrameDelayEnumerator(Action onInitEnded, bool globalSchedule = true)
     {
         for (var i = 0; i < Capacity; i++)
-            if (InitializeOnIndex(i)) yield return null;
-            else yield break;
+        {
+            if (globalSchedule && --_frameInstantiateLimitCounter < 1)
+                yield return null;
+            InitializeOnIndex(i);
+            if (!globalSchedule) yield return null;
+        }
+
         onInitEnded?.Invoke();
     }
 
-    private bool InitializeOnIndex(int i)
+    private void InitializeOnIndex(int i)
     {
         var randomPrefab = _objectPrefab[Random.Range(0, _objectPrefab.Length)];
-        if (randomPrefab == null) return false;
+        if (randomPrefab == null) return;
         if (Objects[i] != null) Objects[i].Dispose();
         Objects[i] = randomPrefab.Clone() as T;
-        return true;
     }
 
 

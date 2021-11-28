@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 public class ObjectPoolBehaviour : MonoBehaviour
 {
@@ -6,6 +7,20 @@ public class ObjectPoolBehaviour : MonoBehaviour
     private static ObjectPoolBehaviour _singletone;
 
     // ReSharper disable once IdentifierTypo
-    public static ObjectPoolBehaviour Singletone =>
-        _singletone ??= new GameObject(nameof(ObjectPoolBehaviour)).AddComponent<ObjectPoolBehaviour>();
+    public static ObjectPoolBehaviour Singletone
+    {
+        get
+        {
+            if (!_singletone)
+                _singletone = new GameObject(nameof(ObjectPoolBehaviour)).AddComponent<ObjectPoolBehaviour>();
+            return _singletone;
+        }
+    }
+
+    private void LateUpdate()
+    {
+        OnFrame?.Invoke();
+    }
+
+    public static event Action OnFrame;
 }
