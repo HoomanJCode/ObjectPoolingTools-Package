@@ -8,16 +8,14 @@ using Object = UnityEngine.Object;
 // ReSharper disable once UnusedType.Global
 public class GameObjectPool : GameObjectPool<Transform>
 {
-    public GameObjectPool(GameObject objectPrefab, ushort capacity = 1, Transform parent = null,
-        int initializeFrameStep = 0) : base(
-        objectPrefab.transform, capacity, parent, initializeFrameStep)
+    public GameObjectPool(GameObject objectPrefab, ushort capacity = 1, Transform parent = null) : base(
+        objectPrefab.transform, capacity, parent)
     {
     }
 
     // ReSharper disable once ParameterTypeCanBeEnumerable.Local
-    public GameObjectPool(GameObject[] objectPrefab, ushort capacity = 1, Transform parent = null,
-        int initializeFrameStep = 0) : base(
-        objectPrefab.Select(x => x.transform).ToArray(), capacity, parent, initializeFrameStep)
+    public GameObjectPool(GameObject[] objectPrefab, ushort capacity = 1, Transform parent = null) : base(
+        objectPrefab.Select(x => x.transform).ToArray(), capacity, parent)
     {
     }
 }
@@ -26,20 +24,17 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
     where TComponent : Component
 {
     // ReSharper disable once MemberCanBeProtected.Global
-    public GameObjectPool(TComponent objectPrefab, ushort capacity = 1, Transform parent = null,
-        int initializeFrameStep = 0) : base(
-        new ObjectPoolItem(objectPrefab, parent ? parent : ObjectPoolBehaviour.Singletone.transform), capacity,
-        initializeFrameStep)
+    public GameObjectPool(TComponent objectPrefab, ushort capacity = 1, Transform parent = null) : base(
+        new ObjectPoolItem(objectPrefab, parent ? parent : ObjectPoolBehaviour.Singletone.transform), capacity)
     {
         if (objectPrefab) return;
         Debug.LogError($"{nameof(objectPrefab)} Can not be null!");
     }
 
     // ReSharper disable once MemberCanBeProtected.Global
-    public GameObjectPool(IEnumerable<TComponent> objectPrefab, ushort capacity = 1, Transform parent = null,
-        int initializeFrameStep = 0) : base(
+    public GameObjectPool(IEnumerable<TComponent> objectPrefab, ushort capacity = 1, Transform parent = null) : base(
         objectPrefab.Select(x => new ObjectPoolItem(x, parent ? parent : ObjectPoolBehaviour.Singletone.transform))
-            .ToArray(), capacity, initializeFrameStep)
+            .ToArray(), capacity)
     {
     }
 
