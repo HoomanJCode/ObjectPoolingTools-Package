@@ -6,6 +6,7 @@ using UnityEngine;
 using Object = UnityEngine.Object;
 
 // ReSharper disable once UnusedType.Global
+// ReSharper disable once ClassNeverInstantiated.Global
 public class GameObjectPool : GameObjectPool<Transform>
 {
     public GameObjectPool(GameObject objectPrefab, ushort capacity = 1, Transform parent = null) : base(
@@ -90,6 +91,11 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
     public static void DeActive(TComponent targetObject)
     {
         targetObject.gameObject.SetActive(false);
+    }
+
+    public static void DeActive(GameObject otherGameObject)
+    {
+        otherGameObject.SetActive(false);
     }
 
     public class ObjectPoolItem : IDisposable, ICloneable
