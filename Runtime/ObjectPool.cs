@@ -52,6 +52,10 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
     // ReSharper disable once MemberCanBePrivate.Global
     protected int CurrentPosition { get; set; } = -1;
 
+    // ReSharper disable once MemberCanBePrivate.Global
+    public int InstantiatedIndex { get; private set; }
+    public bool InitializeCompleted => InstantiatedIndex + 1 >= Capacity;
+
     // ReSharper disable once StaticMemberInGenericType
     public static int FrameInstantiateLimit { get; set; } = 1;
 
@@ -102,6 +106,7 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
         if (randomPrefab == null) return;
         if (Objects[i] != null) Objects[i].Dispose();
         Objects[i] = randomPrefab.Clone() as T;
+        InstantiatedIndex = i;
     }
 
 
