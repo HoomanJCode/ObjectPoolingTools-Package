@@ -78,7 +78,7 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
             InitializeOnIndex(i);
     }
 
-    public void InitializeConcurrent(Action onInitEnded = null, bool globalSchedule = true)
+    public void InitializeConcurrent(Action<T[]> onInitEnded = null, bool globalSchedule = true)
     {
         if (_objectPrefab == null || _objectPrefab.Length < 1) return;
         ObjectPoolBehaviour.Singletone.StartCoroutine(InitializeOnFrameDelayEnumerator(onInitEnded, globalSchedule));
@@ -87,7 +87,7 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
         ObjectPoolBehaviour.OnFrame += () => { _frameInstantiateLimitCounter = FrameInstantiateLimit; };
     }
 
-    private IEnumerator InitializeOnFrameDelayEnumerator(Action onInitEnded, bool globalSchedule = true)
+    private IEnumerator InitializeOnFrameDelayEnumerator(Action<T[]> onInitEnded, bool globalSchedule = true)
     {
         for (var i = 0; i < Capacity; i++)
         {
@@ -97,7 +97,7 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
             if (!globalSchedule) yield return null;
         }
 
-        onInitEnded?.Invoke();
+        onInitEnded?.Invoke(Objects);
     }
 
     private void InitializeOnIndex(int i)
