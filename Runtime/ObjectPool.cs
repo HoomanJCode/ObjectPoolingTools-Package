@@ -78,12 +78,8 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
             InitializeOnIndex(i);
     }
 
-    public void InitializeConcurrent(Action<T[]> onInitEnded = null, bool globalSchedule = true)
-    {
-        InitializeConcurrent(null, onInitEnded, globalSchedule);
-    }
-
-    public void InitializeConcurrent(Action<T> onInit, Action<T[]> onInitEnded = null, bool globalSchedule = true)
+    public void InitializeConcurrent(Action<T> onInit = null, Action<T[]> onInitEnded = null,
+        bool globalSchedule = true)
     {
         if (_objectPrefab == null || _objectPrefab.Length < 1) return;
         ObjectPoolBehaviour.Singletone.StartCoroutine(
