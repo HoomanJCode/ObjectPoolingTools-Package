@@ -18,11 +18,7 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
     public ObjectPool(T objectPrefab, ushort capacity = 1)
     {
         if (capacity < 1)
-        {
-            Debug.LogError($"{nameof(capacity)} should be 1 or higher.");
-            return;
-        }
-
+            throw new ArgumentException($"{nameof(capacity)} should be 1 or higher.", nameof(capacity));
         _objectPrefab = new[] {objectPrefab};
         Capacity = capacity;
         Objects = new T[capacity];
@@ -33,20 +29,13 @@ public class ObjectPool<T> : IDisposable where T : class, IDisposable, ICloneabl
     public ObjectPool(T[] objectPrefab, ushort capacity = 1)
     {
         if (objectPrefab == null || objectPrefab.Length < 1)
-        {
-            Debug.LogError($"{nameof(objectPrefab)} Can not be null!");
-            return;
-        }
-
+            throw new NullReferenceException($"{nameof(objectPrefab)} Can not be null!");
         if (capacity < 1)
-        {
-            Debug.LogError($"{nameof(capacity)} should be 1 or higher.");
-            return;
-        }
-
+            throw new ArgumentException($"{nameof(capacity)} should be 1 or higher.", nameof(capacity));
         _objectPrefab = objectPrefab;
         Capacity = capacity;
         Objects = new T[capacity];
+        _cleanable = false;
     }
 
     // ReSharper disable once MemberCanBePrivate.Global
