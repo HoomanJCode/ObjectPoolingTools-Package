@@ -40,12 +40,11 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
     }
 
 
-    private static IEnumerator DeActive(GameObject obj, float deActiveAfter)
+    private static IEnumerator DeActive(ObjectPoolItem obj, float deActiveAfter)
     {
         yield return new WaitForSeconds(deActiveAfter);
-        obj.SetActive(false);
+        obj.Activated = false;
     }
-
 
     public TComponent ActiveNext(Vector3 position, Quaternion rotation, float deActiveAfter = 0)
     {
@@ -62,18 +61,12 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
         for (var c = 0; c < Capacity; c++)
         {
             var nextItem = GetNext();
-            if (nextItem.ComponentData.gameObject.activeInHierarchy) continue;
-            if (setNewPosition)
-            {
-                var transform = nextItem.ComponentData.transform;
-                transform.position = position;
-                transform.rotation = rotation;
-            }
+            if (nextItem.Activated) continue;
+            if (setNewPosition) nextItem.ComponentData.transform.SetPositionAndRotation(position, rotation);
 
-            nextItem.ComponentData.gameObject.SetActive(true);
+            nextItem.Activated = true;
             if (deActiveAfter > 0)
-                ObjectPoolBehaviour.Singletone.StartCoroutine(
-                    DeActive(nextItem.ComponentData.gameObject, deActiveAfter));
+                ObjectPoolBehaviour.Singletone.StartCoroutine(DeActive(nextItem, deActiveAfter));
             return nextItem.ComponentData;
         }
 
@@ -84,24 +77,15 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
     {
         foreach (var monoBehaviour in Objects)
             if (monoBehaviour.ComponentData)
-                monoBehaviour.ComponentData.gameObject.SetActive(false);
+                monoBehaviour.Activated = false;
         ResetPoolPosition();
-    }
-
-    public static void DeActive(TComponent targetObject)
-    {
-        targetObject.gameObject.SetActive(false);
-    }
-
-    public static void DeActive(GameObject otherGameObject)
-    {
-        otherGameObject.SetActive(false);
     }
 
     public class ObjectPoolItem : IDisposable, ICloneable
     {
         private readonly Transform _parent;
         public readonly TComponent ComponentData;
+        public bool Activated { get => ComponentData.gameObject.activeSelf; set => ComponentData.gameObject.SetActive(value); }
 
         public ObjectPoolItem(TComponent componentData, Transform parent)
         {
@@ -114,7 +98,7 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
             var component = Object
                 .Instantiate(ComponentData.gameObject, _parent ? _parent : ComponentData.transform.parent)
                 .GetComponent<TComponent>();
-            component.gameObject.SetActive(false);
+            Activated = false;
             return new ObjectPoolItem(component, _parent);
         }
 
@@ -126,8 +110,8 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
 
         private void ReleaseUnmanagedResources()
         {
-            if (ComponentData)
-                Object.Destroy(ComponentData.gameObject);
+            if (!ComponentData) return;
+            Object.Destroy(ComponentData.gameObject);
         }
 
         ~ObjectPoolItem()
