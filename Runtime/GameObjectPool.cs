@@ -98,8 +98,9 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
             var component = Object
                 .Instantiate(ComponentData.gameObject, _parent ? _parent : ComponentData.transform.parent)
                 .GetComponent<TComponent>();
-            Activated = false;
-            return new ObjectPoolItem(component, _parent);
+            var obj = new ObjectPoolItem(component, _parent);
+            obj.Activated = false;
+            return obj;
         }
 
         public void Dispose()
