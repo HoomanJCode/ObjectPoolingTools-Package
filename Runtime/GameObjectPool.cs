@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditorInternal.Profiling.Memory.Experimental;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -44,6 +45,14 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
     {
         yield return new WaitForSeconds(deActiveAfter);
         obj.Activated = false;
+    }
+
+    public void DeActive(TComponent component, float deActiveAfter=0)
+    {
+        var targetObj = Objects.FirstOrDefault(x=> x!=null && x.ComponentData==component);
+        if (targetObj == null) return;
+        if (deActiveAfter > 0) ObjectPoolBehaviour.Singletone.StartCoroutine(DeActive(targetObj, deActiveAfter));
+        else targetObj.Activated = false;
     }
 
     public TComponent ActiveNext(Vector3 position, Quaternion rotation, float deActiveAfter = 0)
