@@ -94,7 +94,7 @@ public class GameObjectPool<TComponent> : ObjectPool<GameObjectPool<TComponent>.
     {
         private readonly Transform _parent;
         public readonly TComponent ComponentData;
-        public bool Activated { get => ComponentData.gameObject.activeSelf; set => ComponentData.gameObject.SetActive(value); }
+        public bool Activated { get => ComponentData.gameObject && ComponentData.gameObject.activeSelf; set => ComponentData.gameObject.SetActive(value); }
 
         public ObjectPoolItem(TComponent componentData, Transform parent)
         {
