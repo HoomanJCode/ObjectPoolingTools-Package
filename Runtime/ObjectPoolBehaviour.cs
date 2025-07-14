@@ -12,7 +12,10 @@ public class ObjectPoolBehaviour : MonoBehaviour
         get
         {
             if (!_singletone)
+            {
                 _singletone = new GameObject(nameof(ObjectPoolBehaviour)).AddComponent<ObjectPoolBehaviour>();
+                DontDestroyOnLoad(_singletone.gameObject);
+            }
             return _singletone;
         }
     }
